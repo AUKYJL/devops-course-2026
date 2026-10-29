@@ -31,3 +31,26 @@ MaxAuthTries 3, AllowUsers devops.
 01-clean-install — после установки Ubuntu.
 02-keys-configured — после SSH-ключей.
 03-ssh-hardened — после усиления SSH.
+
+## 8. Веб-сервер
+
+Пакет: nginx.
+Конфигурация: /etc/nginx/sites-available/devops-site.
+Активная ссылка: /etc/nginx/sites-enabled/devops-site.
+
+Каталог: /var/www/devops-site.
+Владелец: devops.
+Права файлов 644, каталогов 755.
+
+Сертификат: /etc/ssl/certs/devops.crt (644).
+Закрытый ключ: /etc/ssl/private/devops.key (600).
+Срок сертификата: 365 дней, самоподписанный, SAN: devops.local.
+
+HTTP-порт: 80 с перенаправлением 301 на HTTPS.
+HTTPS-порт: 443.
+
+Проверка: sudo nginx -t.
+Применение: sudo systemctl reload nginx.
+
+Доставка: scripts/deploy.sh через rsync.
+Проверка HTTPS: curl --cacert ~/devops.crt.
