@@ -79,6 +79,39 @@ check "Нет файлов с правом записи для всех" \
 check "Права закрытого ключа" "600" \
     "$(sudo stat -c '%a' /etc/ssl/private/devops.key)"
 
+echo "[5] Контейнеризация"
+
+check "Docker активен" "active" \
+    "$(systemctl is-active docker)"
+
+DB_CONTAINER="$(docker compose \
+    --project-directory "$HOME/app" \
+    ps -q db)"
+
+DB_HEALTH="missing"
+
+if [[ -n "$DB_CONTAINER" ]]; then
+    DB_HEALTH="$(docker inspect \
+        -f '{{.State.Health.Status}}' \
+        "$DB_CONTAINER")"
+fi
+
+check "PostgreSQL healthy" "healthy" "$DB_HEALTH"
+
+UNSAFE_PORTS="$(sudo ss -H -tln | awk '
+    $4 ~ /:(5000|5432)$/ &&
+    $4 !~ /^127\.0\.0\.1:/ &&
+    $4 !~ /^\[::1\]:/ {
+        print $4
+    }'
+)"
+
+check "Порты 5000 и 5432 не открыты извне" \
+    "" "$UNSAFE_PORTS"
+
+check "Права .env" "600" \
+    "$(stat -c '%a' "$HOME/app/.env")"
+
 echo "Пройдено: $PASS, не пройдено: $FAIL"
 
 [[ $FAIL -eq 0 ]] && exit 0 || exit 1
