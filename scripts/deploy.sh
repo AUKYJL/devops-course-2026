@@ -38,7 +38,7 @@ fi
 RSYNC_ARGS=(
     -avz
     --delete
-    --chmod=D755,F644
+    --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r
     -e "ssh -o BatchMode=yes -o ConnectTimeout=5"
 )
 
