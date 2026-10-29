@@ -54,3 +54,36 @@ HTTPS-порт: 443.
 
 Доставка: scripts/deploy.sh через rsync.
 Проверка HTTPS: curl --cacert ~/devops.crt.
+
+## 9. Контейнеризация
+
+Docker Engine установлен из официального репозитория Docker.
+Проверка версии: docker version.
+Docker Compose: docker compose version.
+
+Пользователь devops входит в группу docker.
+
+Проект: /home/devops/app.
+Переменные: /home/devops/app/.env, права 600.
+Секретный файл не хранится в Git и Docker-образе.
+
+Образ приложения: devops-app:1.0.
+База данных: postgres:16-alpine.
+
+Контейнер приложения работает не от root.
+Сеть проекта: backend.
+Именованный том PostgreSQL: db_data.
+
+Приложение: 127.0.0.1:5000.
+PostgreSQL: порт 5432 не опубликован.
+
+Nginx передаёт /app/ на http://127.0.0.1:5000/.
+Настройка: /etc/nginx/sites-available/devops-site.
+
+Запуск: cd ~/app && docker compose up -d.
+Статус: docker compose ps.
+Журналы: docker compose logs.
+Остановка: docker compose down.
+
+Команда down сохраняет том.
+Команда down -v удаляет данные тома.
