@@ -40,13 +40,44 @@ check "UFW активен" "active" \
     "$(sudo ufw status | awk '/^Status:/{print $2}')"
 
 check "Входящий трафик запрещён" "deny" \
-    "$(sudo ufw status verbose | sed -n 's/.*Default: \\([^ ]*\\) (incoming).*/\\1/p')"
+    "$(sudo ufw status verbose | awk '/^Default:/ {print $2}')"
 
 echo "[3] Учётные записи"
 
 awk -F: '$3>=1000 && $3<65534 {
     printf "%s (uid=%s)\n",$1,$3
 }' /etc/passwd
+
+echo "[4] Веб-сервер"
+
+check "Nginx активен" "active" \
+    "$(systemctl is-active nginx)"
+
+NGINX_OK=no
+if sudo nginx -t >/dev/null 2>&1; then
+    NGINX_OK=yes
+fi
+check "Конфигурация Nginx" "yes" "$NGINX_OK"
+
+CERT_THRESHOLD_DAYS="${CERT_THRESHOLD_DAYS:-30}"
+CERT_OK=no
+
+if openssl x509 \
+    -in /etc/ssl/certs/devops.crt \
+    -noout -checkend "$((CERT_THRESHOLD_DAYS * 86400))" \
+    >/dev/null 2>&1; then
+    CERT_OK=yes
+fi
+
+check "Срок сертификата" "yes" "$CERT_OK"
+
+WRITABLE_FILES="$(find /var/www/devops-site -perm -o+w -print)"
+
+check "Нет файлов с правом записи для всех" \
+    "" "$WRITABLE_FILES"
+
+check "Права закрытого ключа" "600" \
+    "$(sudo stat -c '%a' /etc/ssl/private/devops.key)"
 
 echo "Пройдено: $PASS, не пройдено: $FAIL"
 
